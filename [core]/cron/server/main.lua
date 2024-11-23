@@ -12,6 +12,11 @@ local lastTimestamp = false
 ---@param m number
 ---@param cb function|table
 function RunAt(h, m, cb)
+    if type(h) ~= "number" or type(m) ~= "number" or (type(cb) ~= "function" and type(cb) ~= "table") then
+        print("[cron] Invalid arguments to RunAt. Expected (number, number, function/table).")
+        return
+    end
+
     cronJobs[#cronJobs + 1] = {
         h = h,
         m = m,
@@ -26,14 +31,18 @@ end
 
 ---@param timestamp number
 function OnTime(timestamp)
+    local currentDay = os.date("*t", timestamp).day
+    local currentMonth = os.date("*t", timestamp).month
+    local currentYear = os.date("*t", timestamp).year
+
     for i = 1, #cronJobs, 1 do
         local scheduledTimestamp = os.time({
             hour = cronJobs[i].h,
             min = cronJobs[i].m,
             sec = 0, -- Assuming tasks run at the start of the minute
-            day = os.date("%d", timestamp),
-            month = os.date("%m", timestamp),
-            year = os.date("%Y", timestamp),
+            day = currentDay,
+            month = currentMonth,
+            year = currentYear,
         })
 
         if timestamp >= scheduledTimestamp and (not lastTimestamp or lastTimestamp < scheduledTimestamp) then
